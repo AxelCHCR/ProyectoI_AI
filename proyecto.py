@@ -102,7 +102,57 @@ Y_sampled.plot(kind='kde').set_xlabel("Valores")
 plt.ylabel("Densidad")
 plt.title("Distribución del balanceo post sampleo")
 
-x_train, x_test, y_train, y_test = train_test_split(X_sampled.values, Y_sampled.values, test_size=0.2, random_state=42, stratify=y)
+x_train, x_test, y_train, y_test = train_test_split(X_sampled.values, Y_sampled.values, test_size=0.2, random_state=42, stratify=Y_sampled.values)
+
+def sigmoid(x):
+    return 1/(1+np.exp(-x))
+
+class LogisticRegression():
+
+    def __init__(self, lr, n_iters, meta):
+        self.learning_rate = lr
+        self.n_iters = n_iters
+        self.weights = None
+        self.bias = None
+        self.meta = meta
+
+    def fit(self, X, y):
+        n_samples, n_features = X.shape
+        self.weights = np.zeros(n_features)
+        self.bias = 0
+
+        for _ in range(self.n_iters):
+            linear_pred = np.dot(X, self.weights) + self.bias
+            predictions = sigmoid(linear_pred)
+
+            dw = (1/n_samples) * np.dot(X.T, (predictions - y))
+            db = (1/n_samples) * np.sum(predictions-y)
+
+            self.weights = self.weights - self.learning_rate*dw
+            self.bias = self.bias - self.learning_rate*db
+
+    def predict(self, X):
+        linear_pred = np.dot(X, self.weights) + self.bias
+        y_pred = sigmoid(linear_pred)
+        class_pred = [0 if y<=self.meta else 1 for y in y_pred]
+        return class_pred
+    
+    def accuracy(self, y_pred, y_test):
+        return np.sum(y_pred==y_test)/len(y_test)
+    
+    def setLR(self,lr):
+        self.lr = lr
+        
+for i in range(1,10):
+    print("LR:", i*0.1)
+    logistic = LogisticRegression(i*0.1,10000, 0.5)
+    logistic.fit(x_train, y_train)
+
+    prediccion = logistic.predict(x_test)
+    print("Prediccion:", prediccion)
+    acc = logistic.accuracy(prediccion, y_test)
+    print("Accuracy:", acc)
+    print("")
 
 # Model Training and Prediction using KNN
 test_scores = []
