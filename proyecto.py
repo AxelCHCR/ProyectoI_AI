@@ -1,7 +1,10 @@
+# biblioteca para abrir el archivo de datos
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+# bibliotecas necesarias para balancear el contenido
+from sklearn.utils import resample
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier as KNN
 # Model Performance Analysis
@@ -28,6 +31,10 @@ data_copy['Insulin'] = data_copy['Insulin'].fillna(data_copy['Insulin'].median()
 data_copy['BMI'] = data_copy['BMI'].fillna(data_copy['BMI'].median())
 
 p=data_copy.Outcome.value_counts().plot(kind="bar")
+
+dataset["Outcome"].plot(kind='kde').set_xlabel("Cantidad por valores")
+plt.ylabel("Densidad")
+plt.title("Distribución del balanceo")
 
 p = data_copy.hist(figsize = (20,20))
 
@@ -69,10 +76,33 @@ plt.show()
 sns.heatmap(data_copy.corr(), annot=True)
 plt.show()
 
-X = data_copy.drop('Outcome', axis=1) # Features
-y = data_copy['Outcome'] # Target
+# incluir todos los features
+X = data_copy.iloc[:, 0:8]
+# incluir solo los labels
+y = data_copy.iloc[:, 8]
 
-x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+# seleccionar casos positivos y negativos
+positivo = X[y==1]
+negativo = X[y==0]
+
+# DownSample a negativo (clase mayor)
+negativo_sampled = resample(negativo, replace=False,n_samples=len(positivo), random_state=42)
+
+# juntar los datos X positivos y negativos sampleados
+X_sampled = pd.concat([positivo,negativo_sampled])
+
+# juntar datos Y correspondientes a positivos y negativos sampleados
+Y_Pos = pd.DataFrame(np.ones((len(positivo), 1)))
+Y_Neg = pd.DataFrame(np.zeros((len(negativo_sampled), 1)))
+Y_sampled = pd.concat([Y_Pos, Y_Neg])
+
+print(len(X_sampled),len(Y_sampled))
+
+Y_sampled.plot(kind='kde').set_xlabel("Valores")
+plt.ylabel("Densidad")
+plt.title("Distribución del balanceo post sampleo")
+
+x_train, x_test, y_train, y_test = train_test_split(X_sampled.values, Y_sampled.values, test_size=0.2, random_state=42, stratify=y)
 
 # Model Training and Prediction using KNN
 test_scores = []
@@ -126,6 +156,6 @@ roc_auc_score(y_test,y_pred_proba)
 param_grid = {'n_neighbors':np.arange(1,50)}
 knn = KNN()
 knn_cv= GridSearchCV(knn,param_grid,cv=5)
-knn_cv.fit(X,y)
+knn_cv.fit(X_sampled.values, Y_sampled.values)
 print("Best Score:" + str(knn_cv.best_score_))
 print("Best Parameters: " + str(knn_cv.best_params_))
