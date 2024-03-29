@@ -13,6 +13,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import GridSearchCV
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
 
 dataset = pd.read_csv('Datasets/diabetes.csv')
 print(dataset.head())
@@ -209,3 +211,19 @@ knn_cv= GridSearchCV(knn,param_grid,cv=5)
 knn_cv.fit(X_sampled.values, Y_sampled.values)
 print("Best Score:" + str(knn_cv.best_score_))
 print("Best Parameters: " + str(knn_cv.best_params_))
+
+# RED NEURONAL
+accuracy = {}
+for i in range(1, 201): #Probando neuronas [1,200]
+    nn = MLPClassifier(hidden_layer_sizes=(i,), max_iter=10000)
+    nn.fit(x_train, y_train)
+    nn_pred = nn.predict(x_test)
+    nn_accuracy = accuracy_score(y_test, nn_pred)
+    recall = recall_score(y_test, nn_pred)
+    precision = precision_score(y_test, nn_pred)
+    print("Accuracy of Neural Network:", nn_accuracy)
+    print("Recall of Neural Network:", recall)
+    print("Precision of Neural Network:", precision)
+    accuracy[i] = nn_accuracy
+for i, j in accuracy.items():
+    print(f"Number of neurons: {i}, Accuracy: {j}")
