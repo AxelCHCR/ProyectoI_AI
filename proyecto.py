@@ -225,8 +225,55 @@ plt.ylabel("Densidad")
 plt.title("Distribución del balanceo post sampleo")
 
 # dividir los test en train y test
-x_train, x_test, y_train, y_test = train_test_split(X_sampled.values, Y_sampled.values, test_size=0.2, random_state=42, stratify=Y_sampled.values)
+x_train, x_test, y_train, y_test = train_test_split(X_sampled, Y_sampled.values.ravel(), test_size=0.2, random_state=42, stratify=Y_sampled.values.ravel())
 print(len(x_train),len(x_test))
+
+# Model Training and Prediction using KNN
+test_scores = []
+train_scores = []
+
+for i in range(1,100):
+    knn = KNN(n_neighbors=i)
+    knn.fit(x_train,y_train)
+    
+    train_scores.append(knn.score(x_train, y_train))
+    test_scores.append(knn.score(x_test, y_test))
+
+max_train_score = max(train_scores)
+train_scores_ind = [i for i, v in enumerate(train_scores) if v == max_train_score]
+print('Max train score {} % and k = {}'.format(max_train_score*100,list(map(lambda x: x+1, train_scores_ind))))
+
+max_test_score = max(test_scores)
+test_scores_ind = [i for i, v in enumerate(test_scores) if v == max_test_score]
+print('Max test score {} % and k = {}'.format(max_test_score*100,list(map(lambda x: x+1, test_scores_ind))))
+
+plt.figure(figsize=(12, 5))
+p = sns.lineplot(x=range(1, 100), y=train_scores, marker='*', label='Train Score')
+p = sns.lineplot(x=range(1, 100), y=test_scores, marker='o', label='Test Score')
+
+knn = KNN(1)
+knn.fit(x_train,y_train)
+knn.score(x_test,y_test)
+
+pred = knn.predict(x_test)
+cm = confusion_matrix(y_test,pred)
+print("Train set Accuracy: ", accuracy_score(y_train, knn.predict(x_train)))
+print("Test set Accuracy: ", accuracy_score(y_test, pred))
+
+sns.heatmap(cm, annot=True, cmap="RdYlGn" ,fmt='g')
+plt.title('Confusion matrix')
+plt.ylabel('Actual label')
+plt.xlabel('Predicted label')
+plt.show()
+
+print(classification_report(y_test,pred))
+
+param_grid = {'n_neighbors':np.arange(1,100)}
+knn = KNN()
+knn_cv= GridSearchCV(knn,param_grid,cv=5)
+knn_cv.fit(X_sampled.values, Y_sampled.values.ravel())
+print("Best Score:" + str(knn_cv.best_score_))
+print("Best Parameters: " + str(knn_cv.best_params_))
 
 # Model Training and Prediction using Logistic Regresion
 logreg1 = LogReg(random_state=None, max_iter=1000, fit_intercept=True, tol = 0.5, C=0.1).fit(x_train, y_train)
