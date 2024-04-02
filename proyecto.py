@@ -184,12 +184,111 @@ print("Reporte de clasificación con red Neuronal 2: ")
 print(classification_report(y_test, nn_pred))
 
 #---------------------------------------------------------------------------------------------------------------------------------------#
+# Segundo Dataset
 
-# Balanceo Segundo Dataset
 # abrir y leer el archivo
 dataset = pd.read_csv('Datasets/bankruptcy.csv')
-print(dataset.head())
+
+dataset.head()
+
+dataset.tail()
+
+dataset.columns
+
+dataset.columns = dataset.columns.str.strip()
+dataset.column
+
 dataset.describe()
+
+dataset.info()
+
+dataset.isnull().sum()
+
+# Calcular la matriz de correlación
+corr = dataset.corr()
+# Generar una máscara para la parte superior del triángulo
+mask = np.triu(np.ones_like(corr, dtype=bool))
+f, ax = plt.subplots(figsize=(11, 9))
+cmap = sns.diverging_palette(230, 20, as_cmap=True)
+sns.heatmap(corr, mask=mask, cmap=cmap, center=0,
+            linewidths=.5, cbar_kws={"shrink": .5})
+plt.title("Correlation matrix")
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.kdeplot(data=dataset, x='Operating Profit Per Share (Yuan ¥)', hue='Bankrupt?', fill=True, legend=False)
+plt.title('Operating Profit Per Share Distribution for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Operating Profit Per Share (Yuan ¥)')
+plt.ylabel('Density')
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.violinplot(x='Bankrupt?', y='Net Value Per Share (C)', data=dataset, hue='Bankrupt?', legend=False)
+plt.title('Net Value Per Share (C) for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Bankrupt')
+plt.ylabel('Net Value Per Share (C)')
+plt.xticks([0, 1], ['Non-bankrupt', 'Bankrupt'])
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.kdeplot(data=dataset, x='Total Asset Growth Rate', hue='Bankrupt?', fill=True, legend=False)
+plt.title('Total Asset Growth Rate Distribution for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Total Asset Growth Rate')
+plt.ylabel('Density')
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Bankrupt?', y='Liability-Assets Flag', data=dataset)
+plt.title('Liability to Equity for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Bankrupt')
+plt.ylabel('Liability to Equity')
+plt.xticks([0, 1], ['Non-bankrupt', 'Bankrupt'])
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.violinplot(x='Bankrupt?', y='Net Income to Total Assets', data=dataset, hue='Bankrupt?', legend=False)
+plt.title('Net Income to Total Assets for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Bankrupt')
+plt.ylabel('Net Income to Total Assets')
+plt.xticks([0, 1], ['Non-bankrupt', 'Bankrupt'])
+plt.show()
+
+sns.boxenplot(x="Bankrupt?" , y="Net Income to Total Assets" , data=dataset, hue="Bankrupt?", legend=False)
+plt.xlabel("Bankrupt classes")
+plt.ylabel("Net Income to Total Assets")
+plt.title("Distribution of Profit/ Net Income Ratio, by Class");
+
+q1 , q9 = dataset['Net Income to Total Assets'].quantile([0.1,0.9])
+mask = dataset["Net Income to Total Assets"].between(q1 , q9)
+sns.boxplot(x='Bankrupt?' , y='Net Income to Total Assets', data= dataset[mask], hue='Bankrupt?', legend=False)
+plt.xlabel("Bankrupt")
+plt.ylabel("Net Income to Total Assets")
+plt.title("Distribution of Net Income to Total Assets Ratio, by Bankruptcy Status");
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Bankrupt?', y='Per Share Net profit before tax (Yuan ¥)', data=dataset, hue='Bankrupt?', legend=False)
+plt.title('Per Share Net profit before tax Distribution for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Bankrupt')
+plt.ylabel('Per Share Net profit before tax (Yuan ¥)')
+plt.xticks([0, 1], ['Non-bankrupt', 'Bankrupt'])
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x='Inventory and accounts receivable/Net value', y='Bankrupt?', data=dataset)
+plt.title('Inventory and accounts receivable/Net value vs. Likelihood of Bankruptcy')
+plt.xlabel('Inventory and accounts receivable/Net value')
+plt.ylabel('Bankrupt')
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x='Continuous Net Profit Growth Rate', y='Bankrupt?', data=dataset)
+plt.title('Continuous Net Profit Growth Rate vs. Likelihood of Bankruptcy')
+plt.xlabel('Continuous Net Profit Growth Rate')
+plt.ylabel('Bankrupt')
+plt.show()
+
+print(dataset['Bankrupt?'].value_counts())
+p = sns.countplot(data=dataset, x='Bankrupt?', hue='Bankrupt?', legend=False)
 
 # incluir todos los features
 X = dataset.iloc[:, 0:-1].drop(columns='Bankrupt?')
