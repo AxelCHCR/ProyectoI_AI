@@ -182,3 +182,48 @@ nn.fit(x_train, y_train)
 nn_pred = nn.predict(x_test)
 print("Reporte de clasificación con red Neuronal 2: ")
 print(classification_report(y_test, nn_pred))
+
+#---------------------------------------------------------------------------------------------------------------------------------------#
+
+# Balanceo Segundo Dataset
+# abrir y leer el archivo
+dataset = pd.read_csv('Datasets/bankruptcy.csv')
+print(dataset.head())
+dataset.describe()
+
+# incluir todos los features
+X = dataset.iloc[:, 0:-1].drop(columns='Bankrupt?')
+# incluir solo los labels
+y = dataset.iloc[:, 0]
+
+print(len(X),len(y))
+
+# seleccionar casos positivos y negativos
+positivo = X[y==1]
+negativo = X[y==0]
+
+dataset["Bankrupt?"].plot(kind='kde').set_xlabel("Valores")
+plt.ylabel("Densidad")
+plt.title("Distribución del balanceo pre sampleo")
+
+# DownSample a negativo (clase mayor)
+negativo_sampled = resample(negativo, replace=True,n_samples=len(positivo), random_state=42)
+
+# juntar los datos X positivos y negativos sampleados
+X_sampled = pd.concat([positivo,negativo_sampled])
+
+# juntar datos Y correspondientes a positivos y negativos sampleados
+Y_Pos = pd.DataFrame(np.ones((len(positivo), 1)))
+Y_Neg = pd.DataFrame(np.zeros((len(negativo_sampled), 1)))
+Y_sampled = pd.concat([Y_Pos, Y_Neg])
+
+#verificar tamaño del post sampleo
+print(len(X_sampled),len(Y_sampled))
+
+Y_sampled.plot(kind='kde').set_xlabel("Valores")
+plt.ylabel("Densidad")
+plt.title("Distribución del balanceo post sampleo")
+
+# dividir los test en train y test
+x_train, x_test, y_train, y_test = train_test_split(X_sampled.values, Y_sampled.values, test_size=0.2, random_state=42, stratify=Y_sampled.values)
+print(len(x_train),len(x_test))
