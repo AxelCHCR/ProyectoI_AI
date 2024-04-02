@@ -227,3 +227,16 @@ plt.title("Distribución del balanceo post sampleo")
 # dividir los test en train y test
 x_train, x_test, y_train, y_test = train_test_split(X_sampled.values, Y_sampled.values, test_size=0.2, random_state=42, stratify=Y_sampled.values)
 print(len(x_train),len(x_test))
+
+# Model Training and Prediction using Logistic Regresion
+logreg1 = LogReg(random_state=None, max_iter=1000, fit_intercept=True, tol = 0.5, C=0.1).fit(x_train, y_train)
+y_pred1 = logreg1.predict(x_test)
+print("Accuracy:",accuracy_score(y_test,y_pred1))
+
+print("")
+
+logreg2 = LogReg(solver = "liblinear").fit(x_train, y_train)
+y_pred2 = logreg2.predict(x_test)
+print ("Accuracy: " , accuracy_score (y_test , y_pred2))
+print("Reporte de clasificación con Regresión Logística:")
+print(classification_report(y_test, y_pred2))
