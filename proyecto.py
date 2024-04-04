@@ -196,7 +196,7 @@ dataset.tail()
 dataset.columns
 
 dataset.columns = dataset.columns.str.strip()
-dataset.column
+dataset.columns
 
 dataset.describe()
 
@@ -386,3 +386,16 @@ y_pred2 = logreg2.predict(x_test)
 print ("Accuracy: " , accuracy_score (y_test , y_pred2))
 print("Reporte de clasificación con Regresión Logística:")
 print(classification_report(y_test, y_pred2))
+
+# RED NEURONAL
+nn = MLPClassifier(hidden_layer_sizes=(2,2,2), max_iter=10000)
+nn.fit(x_train, y_train)
+nn_pred = nn.predict(x_test)
+nn_accuracy = accuracy_score(y_test, nn_pred)
+print("Accuracy of Neural Network:", nn_accuracy)
+"""
+
+print("Recall of Neural Network:", recall)
+print("Precision of Neural Network:", precision)"""
+print("Reporte de clasificación con red Neuronal 2: ")
+print(classification_report(y_test, nn_pred))
