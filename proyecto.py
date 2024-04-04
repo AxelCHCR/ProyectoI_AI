@@ -182,3 +182,220 @@ nn.fit(x_train, y_train)
 nn_pred = nn.predict(x_test)
 print("Reporte de clasificación con red Neuronal 2: ")
 print(classification_report(y_test, nn_pred))
+
+#---------------------------------------------------------------------------------------------------------------------------------------#
+# Segundo Dataset
+
+# abrir y leer el archivo
+dataset = pd.read_csv('Datasets/bankruptcy.csv')
+
+dataset.head()
+
+dataset.tail()
+
+dataset.columns
+
+dataset.columns = dataset.columns.str.strip()
+dataset.columns
+
+dataset.describe()
+
+dataset.info()
+
+dataset.isnull().sum()
+
+# Calcular la matriz de correlación
+corr = dataset.corr()
+# Generar una máscara para la parte superior del triángulo
+mask = np.triu(np.ones_like(corr, dtype=bool))
+f, ax = plt.subplots(figsize=(11, 9))
+cmap = sns.diverging_palette(230, 20, as_cmap=True)
+sns.heatmap(corr, mask=mask, cmap=cmap, center=0,
+            linewidths=.5, cbar_kws={"shrink": .5})
+plt.title("Correlation matrix")
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.kdeplot(data=dataset, x='Operating Profit Per Share (Yuan ¥)', hue='Bankrupt?', fill=True, legend=False)
+plt.title('Operating Profit Per Share Distribution for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Operating Profit Per Share (Yuan ¥)')
+plt.ylabel('Density')
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.violinplot(x='Bankrupt?', y='Net Value Per Share (C)', data=dataset, hue='Bankrupt?', legend=False)
+plt.title('Net Value Per Share (C) for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Bankrupt')
+plt.ylabel('Net Value Per Share (C)')
+plt.xticks([0, 1], ['Non-bankrupt', 'Bankrupt'])
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.kdeplot(data=dataset, x='Total Asset Growth Rate', hue='Bankrupt?', fill=True, legend=False)
+plt.title('Total Asset Growth Rate Distribution for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Total Asset Growth Rate')
+plt.ylabel('Density')
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Bankrupt?', y='Liability-Assets Flag', data=dataset)
+plt.title('Liability to Equity for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Bankrupt')
+plt.ylabel('Liability to Equity')
+plt.xticks([0, 1], ['Non-bankrupt', 'Bankrupt'])
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.violinplot(x='Bankrupt?', y='Net Income to Total Assets', data=dataset, hue='Bankrupt?', legend=False)
+plt.title('Net Income to Total Assets for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Bankrupt')
+plt.ylabel('Net Income to Total Assets')
+plt.xticks([0, 1], ['Non-bankrupt', 'Bankrupt'])
+plt.show()
+
+sns.boxenplot(x="Bankrupt?" , y="Net Income to Total Assets" , data=dataset, hue="Bankrupt?", legend=False)
+plt.xlabel("Bankrupt classes")
+plt.ylabel("Net Income to Total Assets")
+plt.title("Distribution of Profit/ Net Income Ratio, by Class");
+
+q1 , q9 = dataset['Net Income to Total Assets'].quantile([0.1,0.9])
+mask = dataset["Net Income to Total Assets"].between(q1 , q9)
+sns.boxplot(x='Bankrupt?' , y='Net Income to Total Assets', data= dataset[mask], hue='Bankrupt?', legend=False)
+plt.xlabel("Bankrupt")
+plt.ylabel("Net Income to Total Assets")
+plt.title("Distribution of Net Income to Total Assets Ratio, by Bankruptcy Status");
+
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Bankrupt?', y='Per Share Net profit before tax (Yuan ¥)', data=dataset, hue='Bankrupt?', legend=False)
+plt.title('Per Share Net profit before tax Distribution for Bankrupt vs. Non-bankrupt Companies')
+plt.xlabel('Bankrupt')
+plt.ylabel('Per Share Net profit before tax (Yuan ¥)')
+plt.xticks([0, 1], ['Non-bankrupt', 'Bankrupt'])
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x='Inventory and accounts receivable/Net value', y='Bankrupt?', data=dataset)
+plt.title('Inventory and accounts receivable/Net value vs. Likelihood of Bankruptcy')
+plt.xlabel('Inventory and accounts receivable/Net value')
+plt.ylabel('Bankrupt')
+plt.show()
+
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x='Continuous Net Profit Growth Rate', y='Bankrupt?', data=dataset)
+plt.title('Continuous Net Profit Growth Rate vs. Likelihood of Bankruptcy')
+plt.xlabel('Continuous Net Profit Growth Rate')
+plt.ylabel('Bankrupt')
+plt.show()
+
+print(dataset['Bankrupt?'].value_counts())
+p = sns.countplot(data=dataset, x='Bankrupt?', hue='Bankrupt?', legend=False)
+
+# incluir todos los features
+X = dataset.iloc[:, 0:-1].drop(columns='Bankrupt?')
+# incluir solo los labels
+y = dataset.iloc[:, 0]
+
+print(len(X),len(y))
+
+# seleccionar casos positivos y negativos
+positivo = X[y==1]
+negativo = X[y==0]
+
+dataset["Bankrupt?"].plot(kind='kde').set_xlabel("Valores")
+plt.ylabel("Densidad")
+plt.title("Distribución del balanceo pre sampleo")
+
+# DownSample a negativo (clase mayor)
+negativo_sampled = resample(negativo, replace=True,n_samples=len(positivo), random_state=42)
+
+# juntar los datos X positivos y negativos sampleados
+X_sampled = pd.concat([positivo,negativo_sampled])
+
+# juntar datos Y correspondientes a positivos y negativos sampleados
+Y_Pos = pd.DataFrame(np.ones((len(positivo), 1)))
+Y_Neg = pd.DataFrame(np.zeros((len(negativo_sampled), 1)))
+Y_sampled = pd.concat([Y_Pos, Y_Neg])
+
+#verificar tamaño del post sampleo
+print(len(X_sampled),len(Y_sampled))
+
+Y_sampled.plot(kind='kde').set_xlabel("Valores")
+plt.ylabel("Densidad")
+plt.title("Distribución del balanceo post sampleo")
+
+# dividir los test en train y test
+x_train, x_test, y_train, y_test = train_test_split(X_sampled, Y_sampled.values.ravel(), test_size=0.2, random_state=42, stratify=Y_sampled.values.ravel())
+print(len(x_train),len(x_test))
+
+# Model Training and Prediction using KNN
+test_scores = []
+train_scores = []
+
+for i in range(1,100):
+    knn = KNN(n_neighbors=i)
+    knn.fit(x_train,y_train)
+    
+    train_scores.append(knn.score(x_train, y_train))
+    test_scores.append(knn.score(x_test, y_test))
+
+max_train_score = max(train_scores)
+train_scores_ind = [i for i, v in enumerate(train_scores) if v == max_train_score]
+print('Max train score {} % and k = {}'.format(max_train_score*100,list(map(lambda x: x+1, train_scores_ind))))
+
+max_test_score = max(test_scores)
+test_scores_ind = [i for i, v in enumerate(test_scores) if v == max_test_score]
+print('Max test score {} % and k = {}'.format(max_test_score*100,list(map(lambda x: x+1, test_scores_ind))))
+
+plt.figure(figsize=(12, 5))
+p = sns.lineplot(x=range(1, 100), y=train_scores, marker='*', label='Train Score')
+p = sns.lineplot(x=range(1, 100), y=test_scores, marker='o', label='Test Score')
+
+knn = KNN(1)
+knn.fit(x_train,y_train)
+knn.score(x_test,y_test)
+
+pred = knn.predict(x_test)
+cm = confusion_matrix(y_test,pred)
+print("Train set Accuracy: ", accuracy_score(y_train, knn.predict(x_train)))
+print("Test set Accuracy: ", accuracy_score(y_test, pred))
+
+sns.heatmap(cm, annot=True, cmap="RdYlGn" ,fmt='g')
+plt.title('Confusion matrix')
+plt.ylabel('Actual label')
+plt.xlabel('Predicted label')
+plt.show()
+
+print(classification_report(y_test,pred))
+
+param_grid = {'n_neighbors':np.arange(1,100)}
+knn = KNN()
+knn_cv= GridSearchCV(knn,param_grid,cv=5)
+knn_cv.fit(X_sampled.values, Y_sampled.values.ravel())
+print("Best Score:" + str(knn_cv.best_score_))
+print("Best Parameters: " + str(knn_cv.best_params_))
+
+# Model Training and Prediction using Logistic Regresion
+logreg1 = LogReg(random_state=None, max_iter=1000, fit_intercept=True, tol = 0.5, C=0.1).fit(x_train, y_train)
+y_pred1 = logreg1.predict(x_test)
+print("Accuracy:",accuracy_score(y_test,y_pred1))
+
+print("")
+
+logreg2 = LogReg(solver = "liblinear").fit(x_train, y_train)
+y_pred2 = logreg2.predict(x_test)
+print ("Accuracy: " , accuracy_score (y_test , y_pred2))
+print("Reporte de clasificación con Regresión Logística:")
+print(classification_report(y_test, y_pred2))
+
+# RED NEURONAL
+nn = MLPClassifier(hidden_layer_sizes=(2,2,2), max_iter=10000)
+nn.fit(x_train, y_train)
+nn_pred = nn.predict(x_test)
+nn_accuracy = accuracy_score(y_test, nn_pred)
+print("Accuracy of Neural Network:", nn_accuracy)
+"""
+
+print("Recall of Neural Network:", recall)
+print("Precision of Neural Network:", precision)"""
+print("Reporte de clasificación con red Neuronal 2: ")
+print(classification_report(y_test, nn_pred))
